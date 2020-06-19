@@ -1,5 +1,5 @@
-// to compile: mpicc 01-mmatrix-master.c -o 01-mmatrix-master -lm -Wall
-// to run: mpirun -np order*order 01-mmatrix-master
+// to compile: mpicc master.c -o exe -lm -Wall
+// to run: mpirun exe
 
 #include <string.h>
 #include <stdlib.h>
@@ -9,8 +9,41 @@
 
 int main(int argc, char **argv)
 {
-    
-    
+    printf("************* CAIXEIRO VIAJANTE COM MPI E OMP *************");
+
+    FILE *fp = fopen("arquivo_entrada.txt", "r");
+
+    if (fp == NULL)
+    {
+        printf("Erro na abertura do arquivo\n");
+        return 1;
+    }
+
+    int N;
+    fscanf(fp, "%d", &N);
+    printf("\n%d\n", N);
+
+    int **matriz = (int **)malloc(N * sizeof(int *));
+    for (int n = 0; n < N; n++)
+        matriz[n] = (int *)malloc(N * sizeof(int));
+
+    for (int i = 0; i < N; i++)
+    {
+        for (int j = 0; j < N; j++)
+        {
+            if (fscanf(fp, "%d", &matriz[i][j]) != 1)
+            {
+                fprintf(stderr, "invalid input for a[%d][%d]\n", i, j);
+                fclose(fp);
+                exit(1);
+            }
+            printf(" %d ", matriz[i][j]);
+        }
+        printf("\n");
+    }
+
+    fclose(fp);
+
     /*int my_rank, num_proc, *array_of_errcodes, *c;
     int order, i, j, k, color, row_color, column_color;
     //  int 	my_rank_x, num_proc_x;  // used only when debugging

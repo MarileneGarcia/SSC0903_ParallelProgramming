@@ -7,7 +7,8 @@
 #include"mpi.h"
 
 int main(int argc, char **argv) {
-    int         root, my_rank, num_proc, count, row_color, column_color, parent_rank;
+
+    /*int         root, my_rank, num_proc, count, row_color, column_color, parent_rank;
     int 	*send_buffer=0;
     int         a_oper, b_oper, sendbuf;
     
@@ -68,6 +69,7 @@ int main(int argc, char **argv) {
     MPI_Reduce(&sendbuf, (int *) 0, count, MPI_INT, MPI_SUM, root, intercomm);
 
     //It's time to say bye-bye baby! Thanks Gosh!
-    MPI_Finalize();
+    MPI_Finalize();*/
+    
     exit(0);
 }
