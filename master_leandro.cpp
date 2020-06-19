@@ -363,7 +363,7 @@ int f(int ref, int N, int **matriz, int count)
             // 3ª (i=0: m[2][3] + f(3))
         }
 
-        int r = minimo(aux, N - ref);
+        int r = minimo(aux, N - ref - 1);
         return r;
     }
 
@@ -403,6 +403,8 @@ int **resize_m(int **matriz, int N, int c)
         flag_linha = 0;
         printf("\n");
     }
+
+    return m;
 }
 
 int minimo(int* vetor, int tamanho)
