@@ -1,11 +1,16 @@
 // to compile: mpicc master.c -o exe -lm -Wall
 // to run: mpirun exe
 
+#include <iostream>
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <math.h>
-#include "mpi.h"
+//#include "mpi.h"
+
+int f(int, int, int **);
+
+int *caminho;
 
 int main(int argc, char **argv)
 {
@@ -23,28 +28,34 @@ int main(int argc, char **argv)
     fscanf(fp, "%d", &N);
     printf("\n%d\n", N);
 
-    int **matriz = (int **)malloc(N * sizeof(int *));
+    int **m = (int **)malloc(N * sizeof(int *));
     for (int n = 0; n < N; n++)
-        matriz[n] = (int *)malloc(N * sizeof(int));
+        m[n] = (int *)malloc(N * sizeof(int));
 
     for (int i = 0; i < N; i++)
     {
         for (int j = 0; j < N; j++)
         {
-            if (fscanf(fp, "%d", &matriz[i][j]) != 1)
+            if (fscanf(fp, "%d", &m[i][j]) != 1)
             {
                 fprintf(stderr, "invalid input for a[%d][%d]\n", i, j);
                 fclose(fp);
                 exit(1);
             }
-            printf(" %d ", matriz[i][j]);
+            //printf(" %d ", m[i][j]);
         }
-        printf("\n");
+        //printf("\n");
     }
+
+    //f(0, {1,2,3}) = min (m[0][1] + f(1, {2, 3}), m[0][2] + f(2, {1, 3}), m[0][3] + f(3, {1, 2}) );
+    f(0, N, m);
 
     fclose(fp);
 
-    /*int my_rank, num_proc, *array_of_errcodes, *c;
+    /*
+    if
+    {
+        int my_rank, num_proc, *array_of_errcodes, *c;
     int order, i, j, k, color, row_color, column_color;
     //  int 	my_rank_x, num_proc_x;  // used only when debugging
     int maxprocs, root, key, cij_result;
@@ -319,7 +330,25 @@ int main(int argc, char **argv)
 
     // ...
     // that's all folks!
-    MPI_Finalize();*/
+    MPI_Finalize();
+    }*/
 
     exit(0);
+}
+
+int f(int ref, int ant, int N, int **matriz)
+{
+    int *aux = (int *) malloc((N - ref - 1) * sizeof(int));
+
+    if (ref + 1 < N)
+    {
+        for (int i = 0; i < N - ref - 1; i++)
+        {
+            printf("%d  ", matriz[ref][i + 1]);
+            aux[i] = matriz[ref][ref + i] + f(ref + i, N, matriz);
+        }
+    }
+    else return 0;
+
+    return 1;
 }
