@@ -8,9 +8,11 @@
 #include <math.h>
 //#include "mpi.h"
 
-int f(int, int, int **);
+int f(int, int, int **, int);
 
-int *caminho;
+int **resize_m(int **, int, int);
+
+int minimo(int*, int);
 
 int main(int argc, char **argv)
 {
@@ -46,11 +48,13 @@ int main(int argc, char **argv)
         }
         //printf("\n");
     }
-
-    //f(0, {1,2,3}) = min (m[0][1] + f(1, {2, 3}), m[0][2] + f(2, {1, 3}), m[0][3] + f(3, {1, 2}) );
-    f(0, N, m);
-
     fclose(fp);
+
+    //resize_m(m, N, 2);
+
+    int r = f(0,N,m, 0);
+
+    printf("\n\nResultado: %d \n\n", r);
 
     /*
     if
@@ -336,19 +340,81 @@ int main(int argc, char **argv)
     exit(0);
 }
 
-int f(int ref, int ant, int N, int **matriz)
+int f(int ref, int N, int **matriz, int count)
 {
-    int *aux = (int *) malloc((N - ref - 1) * sizeof(int));
+    int *aux = (int *)malloc((N - ref - 1) * sizeof(int));
+    int aux2 = 0;
 
     if (ref + 1 < N)
+    // 1ª 1 < 4
+    // 2ª 2 < 4
+    // 3ª 3 < 4
     {
-        for (int i = 0; i < N - ref - 1; i++)
+        // 1ª N - ref - 1 = 3 ---> i = 0 1 2
+        // 2ª N - ref - 1 = 2 ---> i = 0 1
+        // 3ª N - ref - 1 = 1 ---> i = 0
+        for (int i = 0; i < N - ref - 1 - count; i++)
         {
-            printf("%d  ", matriz[ref][i + 1]);
-            aux[i] = matriz[ref][ref + i] + f(ref + i, N, matriz);
+            printf("%d  ", matriz[ref][ref + i + 1]);
+            aux2 = matriz[ref][ref + i + 1] + f(ref + i + 1, N-1, resize_m(matriz,N,ref), count+1);
+            aux[i] = aux2;
+            // 1ª (i=0: m[0][1] + f(1)) (i=1: m[0][2] + f(2)) (i=2: m[0][3] + f(3))
+            // 2ª (i=0: m[1][2] + f(2)) (i=1: m[1][3] + f(3))
+            // 3ª (i=0: m[2][3] + f(3))
+        }
+
+        int r = minimo(aux, N - ref);
+        return r;
+    }
+
+    return 0;       
+}
+
+int **resize_m(int **matriz, int N, int c)
+{
+    int **m = (int **)malloc((N - 1) * sizeof(int *));
+    for (int n = 0; n < N - 1; n++)
+        m[n] = (int *)malloc(N * sizeof(int));
+
+    int flag_linha = 0;
+    int flag_coluna = 0;
+    for (int i = 0; i < N - 1; i++)
+    {
+        if (i >= c)
+            flag_linha = 1;
+        for (int j = 0; j < N - 1; j++)
+        {
+            if (j >= c)
+                flag_coluna = 1;
+
+            if (flag_linha == 0 && flag_coluna == 0)
+                m[i][j] = matriz[i][j];
+            if (flag_linha == 0 && flag_coluna == 1)
+                m[i][j] = matriz[i][j + 1];
+            if (flag_linha == 1 && flag_coluna == 0)
+                m[i][j] = matriz[i + 1][j];
+            if (flag_linha == 1 && flag_coluna == 1)
+                m[i][j] = matriz[i + 1][j + 1];
+            
+            flag_coluna = 0;
+
+            printf(" %d ", m[i][j]);
+        }
+        flag_linha = 0;
+        printf("\n");
+    }
+}
+
+int minimo(int* vetor, int tamanho)
+{
+    int menor = 100000000;
+    for (int i = 1; i < tamanho; i++)
+    {
+        if (vetor[i] < menor)
+        {
+           menor = vetor[i];
         }
     }
-    else return 0;
 
-    return 1;
+    return menor;
 }
