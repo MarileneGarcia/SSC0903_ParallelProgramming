@@ -39,7 +39,7 @@ int master_io(MPI_Comm master_comm, MPI_Comm comm)
     int *caminho;
 
     /*abre o arquivo*/
-    fp = fopen("arquivo_entrada.txt", "r");
+    fp = fopen("2_arquivo_entrada.txt", "r");
 
     if (fp == NULL)
     {
@@ -66,26 +66,26 @@ int master_io(MPI_Comm master_comm, MPI_Comm comm)
     }
 
     /* retorno de menor caminho anterior*/
-    int *retorno_aux = (int*)calloc(n+2,sizeof(int));
+    int *retorno_aux = (int *)calloc(n + 2, sizeof(int));
     int *retorno;
     /*soma dos custos*/
     int menor_custo = 9999999;
     /*custo para ir do no atual para o prox_no*/
     int custo;
 
-    int** matriz_rz = fenix_matriz(matriz_adj, n); 
+    int **matriz_rz = fenix_matriz(matriz_adj, n);
 
     /* percorrerah todos os nos possiveis */
     /* nos_seg = TAM|NOS_SEGS*/
     for (j = 1; j < n; j++)
     {
         // recebe o caminho de menor custo
-        MPI_Recv(&retorno_aux[0], n+2, MPI_INT, j, 5, master_comm, &status);
+        MPI_Recv(&retorno_aux[0], n + 2, MPI_INT, j, 5, master_comm, &status);
 
-        printf("\ncaminho de retorno do rank %d:\n", j);
+        /*printf("\ncaminho de retorno do rank %d:\n", j);
         for (i = 0; i < retorno_aux[0]; i++)
             printf(" %d ", retorno_aux[i]);
-        printf("\n");
+        printf("\n");*/
 
         custo = matriz_rz[rank][j];
 
@@ -106,9 +106,13 @@ int master_io(MPI_Comm master_comm, MPI_Comm comm)
     /*atualiza o tamanho do vetor*/
     retorno[0]++;
 
-    printf("\ncaminho de retorno do rank %d:\n", rank);
-    for (i = 0; i < retorno[0]; i++)
-        printf(" %d ", retorno[i]);
+    /* Print custo*/
+    printf("%d\n", retorno[1]);
+
+    /* caminho */
+    for (i = retorno[0] - 1; i >= 2; i--)
+        printf("%d ", retorno[i]);
+
     printf("\n");
 
     return 0;
