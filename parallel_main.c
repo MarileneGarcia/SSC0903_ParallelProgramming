@@ -51,9 +51,9 @@ int master_io( MPI_Comm master_comm, MPI_Comm comm )
     matriz_adj = matriz(fp,n);
     /*fecha o arquivo*/
     /*fclose(fp);*/
-    printf("%d\n", matriz_adj[0][0]);
+    //printf("%d\n", matriz_adj[0][0]);
     MPI_Comm_rank( comm, &rank );
-    printf("rank master: %d\n",rank);
+    //printf("\nrank master: %d\n",rank);
     MPI_Comm_size( master_comm, &size );
     for (i = 1; i < n; i++) {
         MPI_Send(&n, 1, MPI_INT, i, 0, MPI_COMM_WORLD);
@@ -78,29 +78,37 @@ int slave_io( MPI_Comm master_comm, MPI_Comm comm )
 
     //Recebe o quantidade de cidades a serem visitadas
     MPI_Recv( &n, 1, MPI_INT, 0, 0, MPI_COMM_WORLD, &status );
-    printf("rank %d     n = %d\n",rank,n);
+    //printf("rank %d     n = %d\n",rank,n);
 
     matriz = (int**)malloc(n*sizeof(int*));
     for(i = 0; i<n; i++)
         matriz[i] = (int*)malloc(n*sizeof(int));
     MPI_Recv( &matriz[0][0], n*n, MPI_INT, 0, 1, MPI_COMM_WORLD, &status );
-    printf("%d\n", matriz[0][0]);
+    //printf("%d\n", matriz[0][0]);
 
-    //int nos_seg[n];
     /*inicializa vetor de nos seguintes*/
-    //for(i=0;i<n;i++)
-    //    nos_seg[i] = i;
-    //0 1 2 3 
-    //nos_seg[0] = n;
-    //4 1 2 3
-    //no_atual = quebra_vet(nos_seg, rank-1);
+    int *nos_seg = (int*)malloc(n*sizeof(int));
+    printf("\na percorrer no rank %d:\n",rank);
+    for(i=0;i<n;i++)
+        nos_seg[i] = i;
+
+    nos_seg[0] = n;
+
+    int no_atual = quebra_vet(nos_seg, rank-1);
+
+    printf("\nno atual no rank %d: %d\n\n",rank, no_atual);
+
+    for(i=0;i<nos_seg[0];i++) 
+        printf(" %d  ",nos_seg[i]);
+    printf("\n");
+
     //3 2 3
-    //caminho = pcv(matriz, nos_seg, no_atual);
-    //Enviar o vetor com custo e caminho para o mestre
-    //MPI_Send( buf, strlen(buf) + 1, MPI_CHAR, 0, 0, master_comm );
-    
-    //sprintf( buf, "Goodbye from slave %d\n", rank );
-    //MPI_Send( buf, strlen(buf) + 1, MPI_CHAR, 0, 0, master_comm );
+    int *caminho = pcv(matriz, nos_seg, no_atual);
+
+    printf("\ncaminho no rank %d:\n",rank);
+    for(i=0;i<caminho[0];i++)
+        printf(" %d  ",caminho[i]);
+    printf("\n");
 
     return 0;
 }
