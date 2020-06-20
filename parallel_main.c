@@ -5,235 +5,188 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "mpi.h"
+#include "pcv.h"
 
-/* le a matriz no arquivo fp*/
-int **matriz(FILE *, int);
-/* retira um elemento do vetor e o retorna */
-/* 4 1 2 3 (0)->   3 2 3*/
-int quebra_vet(int *, int);
-/* retorna uma copia de um vetor*/
-int *copiar(int *);
-/* retorna o menor caminho*/
-int *pcv(int **, int *, int);
+#define TAG_RESULT 0
+#define TAG_ASK_FOR_JOB 1
+#define TAG_JOB_DATA 2
+#define TAG_STOP 3
 
-int main()
+void master();
+
+void slave();
+
+int main(int argc, char **argv)
 {
-    /*teste das funcoes auxiliares
-    int *vet = (int*)malloc(sizeof(int)*5);
-    int i,j;
-    int no_seg;
-    vet[0] = 5;
-    //alocando vetor
-    for(i=1; i<vet[0]; i++)
-        vet[i] = i-1;
-    
-    int *vet_copy = copiar(vet);
-    
-    for(j = 1; j<vet[0]; j++){
-        no_seg = quebra_vet(vet,j-1);
-        printf("\nIteracao: %d - No seguinte: %d\n", j, no_seg);
-        
-        for(i=1; i<vet[0]; i++)
-            printf("%d ", vet[i]);
-        
-        printf("\n");
-    
-        vet = copiar(vet_copy);
-    }
-        */
-    /*leitura da matriz de adjacencia*/
-    FILE *fp;
-    int n, i;
-    int **matriz_adj;
-    int *caminho;
+    int rank;
 
-    /*abre o arquivo*/
-    fp = fopen("arquivo_entrada.txt", "r");
+    MPI_Init(&argc, &argv);
+    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
-    if (fp == NULL)
-    {
-        printf("Erro na abertura do arquivo\n");
-        return 1;
-    }
-    /*le o tamanho da matriz*/
-    fscanf(fp, "%d", &n);
-    /*le a matriz*/
-    matriz_adj = matriz(fp, n);
-    /*fecha o arquivo*/
-    /*fclose(fp);*/
+    if (rank == 0)
+        master();
+    else
+        slave();
 
-    int no_inicial = 0;
-    int *nos_seg = (int *)malloc(n * sizeof(int));
-
-    /*inicializa vetor de nos seguintes*/
-    for (i = 0; i < n; i++)
-        nos_seg[i] = i;
-
-    nos_seg[0] = n;
-
-    caminho = pcv(matriz_adj, nos_seg, no_inicial);
-
-    // for (i=0; i < n; i++)
-    //   free(matriz_adj[i]);
-
-    //free(matriz_adj);
-
-    /* Print custo*/
-    printf("%d\n", caminho[1]);
-
-    /* caminho */
-    for (i = caminho[0] - 1; i >= 2; i--)
-        printf("%d ", caminho[i]);
-
-    printf("\n");
-
-    free(nos_seg);
-    free(caminho);
-
-    return 0;
+    MPI_Finalize();
 }
 
-int **matriz(FILE *fp, int n)
+void master()
 {
-    int i, j;
-    int **m = (int **)malloc(n * sizeof(int *));
+    MPI_Status stat, stat2;
 
-    for (i = 0; i < n; i++)
-        m[i] = (int *)malloc(n * sizeof(int));
-
-    for (i = 0; i < n; i++)
+    while (/* there are jobs unprocessed */ || /* there are slaves still working on jobs */)
     {
-        for (j = 0; j < n; j++)
+
+        // Wait for any incomming message
+        MPI_Probe(MPI_ANY_SOURCE, MPI_ANY_TAG, MPI_COMM_WORLD, &stat);
+
+        // Store rank of receiver into slave_rank
+        int slave_rank = stat.MPI_SOURCE;
+
+        // Decide according to the tag which type of message we have got
+        if (stat.MPI_TAG == TAG_ASK_FOR_JOB)
         {
-            if (fscanf(fp, "%d", &m[i][j]) != 1)
+
+            MPI_Recv(buff, slave_rank, TAG_ASK_FOR_JOB, MPI_COMM_WORLD, &stat2);
+
+            if (/* there are unprocessed jobs */)
             {
-                fprintf(stderr, "invalid input for a[%d][%d]\n", i, j);
-                fclose(fp);
-                exit(1);
+
+                // here we have unprocessed jobs , we send one job to the slave
+                job = /* compute job */
+                    /* pack data of job into the buffer msg_buffer */
+                    MPI_Send(msg_buffer, /*...*/, slave_rank, TAG_JOB_DATA, MPI_COMM_WORLD);
+                /* mark slave with rank my_rank as working on a job */
             }
-            /*printf(" %d ", m[i][j]);*/
+            else
+            {
+
+                // send stop msg to slave
+                MPI_Send(/*...*/, slave_rank, TAG_STOP, MPI_COMM_WORLD);
+            }
         }
-        /* printf("\n");*/
-    }
+        else
+        {
 
-    return m;
+            // We got a result message
+            MPI_Recv(result_data_buffer, /*...*/, slave_rank, TAG_RESULT, MPI_COMM_WORLD, &stat2);
+            /* put data from result_data_buffer into a global result */
+            /* mark slave with rank slave_rank as stopped */
+        }
+    }
 }
 
-int quebra_vet(int *vet, int pos)
+void slave()
 {
-
-    /*caso a posicao n exista no vetor */
-    if (pos >= vet[0])
+    int stopped = 0;
+    MPI_Status stat, stat2;
+    do
     {
-        printf("\nErro:Posicao inexistente\n");
-        return -1;
-    }
-    /*caso o vetor esteja vazio*/
-    else if (vet[0] == 1)
-    {
-        printf("\nErro: Vetor vazio\n");
-    }
 
-    int i, elem = vet[pos + 1];
+        // Here we send a message to the master asking for a job
+        MPI_Send(/*...*/, 0, TAG_ASK_FOR_JOB, MPI_COMM_WORLD);
+        MPI_Probe(0, /*...*/, MPI_COMM_WORLD, &stat);
+        if (stat.MPI_TAG == TAG_JOB_DATA)
+        {
 
-    /*shiftar todos elemento do vetor até aquela posicao*/
-    for (i = pos + 1; i < (vet[0] - 1); i++)
-        vet[i] = vet[i + 1];
+            // Retrieve job data from master into msg_buffer
+            MPI_Recv(msg_buffer, 0, TAG_JOB_DATA, MPI_COMM_WORLD, &stat2);
+            /* work on job_data to get a result and store the result into
+            result_buffer */
 
-    /*atualizar o tam*/
-    vet[0]--;
-
-    return elem;
+            // send result to master
+            MPI_Send(result_buffer, /*...*/, 0, TAG_RESULT, MPI_COMM_WORLD);
+        }
+        else
+        {
+            // We got a stop message we have to retrieve it by using MPI_Recv
+            // But we can ignore the data from the MPI_Recv call
+            MPI_Recv(/*...*/, 0, TAG_STOP, MPI_COMM_WORLD, &stat2);
+            stopped = 1;
+        }
+    } while (stopped == 0);
 }
 
-int *copiar(int *vet)
+/*int main(int argc, char **argv)
 {
+    MPI_Init(NULL, NULL);
+
     int i;
-    int *vet_copy = (int *)malloc(vet[0] * sizeof(int));
 
-    for (i = 0; i < vet[0]; i++)
-        vet_copy[i] = vet[i];
+    // Get the number of processes
+    int world_size;
+    MPI_Comm_size(MPI_COMM_WORLD, &world_size);
 
-    return vet_copy;
-}
+    // Get the rank of the process
+    int world_rank;
+    MPI_Comm_rank(MPI_COMM_WORLD, &world_rank);
 
-int *pcv(int **matriz_adj, int *nos_seg, int no_atual)
-{
+    // Get the name of the processor
+    char processor_name[MPI_MAX_PROCESSOR_NAME];
+    int name_len;
+    MPI_Get_processor_name(processor_name, &name_len);
 
-    int *retorno;
-    /* chegou a o ultimo nó */
-    if (nos_seg[0] == 1)
+    if (world_rank == 0)
     {
+        //leitura da matriz de adjacencia
+        FILE *fp;
+        int n;
+        int **matriz_adj;
+        int *caminho;
 
-        /* cria um vetor que sera pcv*/
-        retorno = (int *)malloc(4 * sizeof(int));
+        printf("Processo mestre no processador %s (rank %d) \n", 
+            processor_name, world_rank);
 
-        /* atualiza o tamanho do vetor */
-        retorno[0] = 4;
+        //abre o arquivo
+        fp = fopen("arquivo_entrada.txt", "r");
 
-        /* atualizar o custo */
-        retorno[1] = matriz_adj[no_atual][nos_seg[1]];
-        retorno[1] += matriz_adj[nos_seg[1]][0];
+        if (fp == NULL)
+        {
+            printf("Erro na abertura do arquivo\n");
+            return 1;
+        }
+        //le o tamanho da matriz
+        fscanf(fp, "%d", &n);
+        //le a matriz
+        matriz_adj = matriz(fp, n);
+        //fecha o arquivo
+        //fclose(fp);
 
-        /* adiciona o no final */
-        retorno[2] = 0;
-        /* adiciona o no atual */
-        retorno[3] = no_atual;
+        int no_inicial = 0;
+        int *nos_seg = (int *)malloc(n * sizeof(int));
+
+        //inicializa vetor de nos seguintes
+        for (i = 0; i < n; i++)
+            nos_seg[i] = i;
+
+        nos_seg[0] = n;
+
+        caminho = pcv(matriz_adj, nos_seg, no_inicial);
+
+        // for (i=0; i < n; i++)
+        //   free(matriz_adj[i]);
+
+        //free(matriz_adj);
+
+        // Print custo
+        printf("%d\n", caminho[1]);
+
+        // caminho
+        for (i = caminho[0] - 1; i >= 2; i--)
+            printf("%d ", caminho[i]);
+
+        printf("\n");
+
+        free(nos_seg);
+        free(caminho);
     }
     else
     {
-
-        int j;
-
-        /* guarda o noh futuro que sera visitado */
-        int prox_no_atual;
-        /* mantem uma copia*/
-        /* 4 1 2 3*/
-        int *no_seg_copy = copiar(nos_seg);
-        /* retorno de menor caminho anterior*/
-        int *retorno_aux;
-        /*soma dos custos*/
-        int menor_custo = 9999999;
-        /*custo para ir do no atual para o prox_no*/
-        int custo;
-
-        /* percorrerah todos os nos possiveis */
-        /* nos_seg = TAM|NOS_SEGS*/
-        for (j = 1; j < nos_seg[0]; j++)
-        {
-
-            /* retorna o elemento que sera o proximo noh e o retira do vetor */
-            /*3 1 3*/
-            prox_no_atual = quebra_vet(nos_seg, j - 1);
-
-            if (prox_no_atual == -1)
-                printf("Erro: quebra de vet");
-
-            /* recebe o caminho de menor custo*/
-            retorno_aux = pcv(matriz_adj, nos_seg, prox_no_atual);
-
-            custo = matriz_adj[no_atual][prox_no_atual];
-
-            /* verifica se caminho recebido possui o menor custo*/
-            if (menor_custo > retorno_aux[1] + custo)
-            {
-                retorno = retorno_aux;
-                menor_custo = retorno[1] + custo;
-            }
-            /*3 2 3*/
-            /* faz uma copia do nos_seg original*/
-            nos_seg = copiar(no_seg_copy);
-            /*4 1 2 3 */
-        }
-
-        /* aumenta o tamanho do vetor*/
-        retorno = (int *)realloc(retorno, (retorno[0] + 1) * sizeof(int));
-        /*adicionar o custo */
-        retorno[1] = menor_custo;
-        /*adiciona o no atual*/
-        retorno[retorno[0]] = no_atual;
-        /*atualiza o tamanho do vetor*/
-        retorno[0]++;
+        
     }
-    return retorno;
-}
+
+    MPI_Finalize();
+
+    exit(0);
+}*/
