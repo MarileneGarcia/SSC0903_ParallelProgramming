@@ -2,30 +2,60 @@
 #include <stdlib.h>
 #include "pcv.h"
 
-int **matriz(FILE *fp, int n)
+int *matriz(FILE *fp, int n)
 {
     int i, j;
-    int **m = (int **)malloc(n * sizeof(int *));
+    int *m = (int *)malloc(n * n * sizeof(int));
 
-    for (i = 0; i < n; i++)
-        m[i] = (int *)malloc(n * sizeof(int));
-
-    for (i = 0; i < n; i++)
+    for (i = 0; i < n * n; i++)
     {
-        for (j = 0; j < n; j++)
+        if (fscanf(fp, "%d", &m[i]) != 1)
         {
-            if (fscanf(fp, "%d", &m[i][j]) != 1)
-            {
-                fprintf(stderr, "invalid input for a[%d][%d]\n", i, j);
-                fclose(fp);
-                exit(1);
-            }
-            /*printf(" %d ", m[i][j]);*/
+            fclose(fp);
+            exit(1);
         }
+        /*printf(" %d ", m[i][j]);*/
         /* printf("\n");*/
     }
 
     return m;
+}
+
+void print_vetor(int *matriz, int n)
+{
+    for (int i = 0; i < n * n; i++)
+    {
+        printf(" %d ", matriz[i]);
+        if ((i + 1) % n == 0)
+            printf("\n");
+    }
+}
+
+int **fenix_matriz(int *vetor, int n)
+{
+    int i, j;
+
+    int **m = (int **)calloc(n, sizeof(int *));
+    for (int i = 0; i < n; i++)
+        m[i] = (int *)calloc(n, sizeof(int));
+
+    for (int i = 0; i < n; i++)
+        for (int j = 0; j < n; j++)
+            m[i][j] = vetor[i * n + j];
+
+    return m;
+}
+
+void print_matriz(int **matriz, int n)
+{
+    for (int i = 0; i < n; i++)
+    {
+        for (int j = 0; j < n; j++)
+        {
+            printf(" %d ", matriz[i][j]);
+        }
+        printf("\n");
+    }
 }
 
 int quebra_vet(int *vet, int pos)
