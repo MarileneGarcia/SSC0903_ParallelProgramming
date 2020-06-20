@@ -29,7 +29,7 @@ int main(int argc, char **argv)
 /* This is the master */
 int master_io(MPI_Comm master_comm, MPI_Comm comm)
 {
-    int i, n, size, rank;
+    int i, j, n, size, rank;
     char buf[256];
     MPI_Status status;
 
@@ -62,11 +62,54 @@ int master_io(MPI_Comm master_comm, MPI_Comm comm)
     for (i = 1; i < n; i++)
     {
         MPI_Send(&n, 1, MPI_INT, i, 0, MPI_COMM_WORLD);
-        //Recebe vetor com custo e caminho de cada escravo
         MPI_Send(&(matriz_adj[0]), n * n, MPI_INT, i, 1, MPI_COMM_WORLD);
-        //MPI_Recv( buf, 256, MPI_CHAR, i, 0, master_comm, &status );
-        //fputs( buf, stdout );
     }
+
+    /* retorno de menor caminho anterior*/
+    int *retorno_aux = (int*)calloc(n+2,sizeof(int));
+    int *retorno;
+    /*soma dos custos*/
+    int menor_custo = 9999999;
+    /*custo para ir do no atual para o prox_no*/
+    int custo;
+
+    int** matriz_rz = fenix_matriz(matriz_adj, n); 
+
+    /* percorrerah todos os nos possiveis */
+    /* nos_seg = TAM|NOS_SEGS*/
+    for (j = 1; j < n; j++)
+    {
+        // recebe o caminho de menor custo
+        MPI_Recv(&retorno_aux[0], n+2, MPI_INT, j, 5, master_comm, &status);
+
+        printf("\ncaminho de retorno do rank %d:\n", j);
+        for (i = 0; i < retorno_aux[0]; i++)
+            printf(" %d ", retorno_aux[i]);
+        printf("\n");
+
+        custo = matriz_rz[rank][j];
+
+        // verifica se caminho recebido possui o menor custo
+        if (menor_custo > retorno_aux[1] + custo)
+        {
+            retorno = copiar(retorno_aux);
+            menor_custo = retorno[1] + custo;
+        }
+    }
+
+    /* aumenta o tamanho do vetor*/
+    retorno = (int *)realloc(retorno, (retorno[0] + 1) * sizeof(int));
+    /*adicionar o custo */
+    retorno[1] = menor_custo;
+    /*adiciona o no atual*/
+    retorno[retorno[0]] = rank;
+    /*atualiza o tamanho do vetor*/
+    retorno[0]++;
+
+    printf("\ncaminho de retorno do rank %d:\n", rank);
+    for (i = 0; i < retorno[0]; i++)
+        printf(" %d ", retorno[i]);
+    printf("\n");
 
     return 0;
 }
@@ -94,8 +137,8 @@ int slave_io(MPI_Comm master_comm, MPI_Comm comm)
     //if(rank==1) print_matriz(matriz,n);
 
     /*inicializa vetor de nos seguintes*/
-    /*int *nos_seg = (int *)calloc(n, sizeof(int));
-    printf("\na percorrer no rank %d:\n", rank);
+    int *nos_seg = (int *)calloc(n, sizeof(int));
+    //printf("\na percorrer no rank %d:\n", rank);
     for (i = 0; i < n; i++)
         nos_seg[i] = i;
 
@@ -105,16 +148,18 @@ int slave_io(MPI_Comm master_comm, MPI_Comm comm)
 
     //printf("\nno atual no rank %d: %d\n\n",rank, no_atual);
 
-    for (i = 0; i < nos_seg[0]; i++)
+    /*for (i = 0; i < nos_seg[0]; i++)
         printf(" %d  ", nos_seg[i]);
-    printf("\n");
+    printf("\n");*/
 
-    /*int *caminho = pcv(matriz, nos_seg, no_atual);
+    int *caminho = pcv(matriz, nos_seg, no_atual);
 
-    printf("\ncaminho no rank %d:\n", rank);
+    /*printf("\ncaminho no rank %d:\n", rank);
     for (i = 0; i < caminho[0]; i++)
         printf(" %d  ", caminho[i]);
     printf("\n");*/
+
+    MPI_Send(&caminho[0], caminho[0], MPI_INT, 0, 5, MPI_COMM_WORLD);
 
     return 0;
 }
