@@ -88,7 +88,7 @@ int *pcv(int** matriz_adj, int* nos_seg, int no_atual){
 
     int *retorno;
     /* chegou a o ultimo nó */
-    if(nos_seg[0] == 2){
+    if(nos_seg[0] == 1){
         
         /* cria um vetor que sera pcv*/
         retorno = (int*)malloc(4*sizeof(int));
@@ -102,9 +102,9 @@ int *pcv(int** matriz_adj, int* nos_seg, int no_atual){
 
         /* adiciona o no final */
         retorno[2] = 0;
-
         /* adiciona o no atual */
         retorno[3] = no_atual;
+
 
 
     }else{
@@ -149,6 +149,7 @@ int *pcv(int** matriz_adj, int* nos_seg, int no_atual){
             nos_seg = copiar(no_seg_copy);
             /*4 1 2 3 */
 
+
         }
 
         /* aumenta o tamanho do vetor*/
@@ -161,7 +162,6 @@ int *pcv(int** matriz_adj, int* nos_seg, int no_atual){
         retorno[0]++;
 
     }
-
     return retorno;
         
 }
@@ -170,7 +170,6 @@ int main(){
 
     /*teste das funcoes auxiliares
     int *vet = (int*)malloc(sizeof(int)*5);
-
     int i,j;
     int no_seg;
     vet[0] = 5;
@@ -181,9 +180,7 @@ int main(){
     int *vet_copy = copiar(vet);
     
     for(j = 1; j<vet[0]; j++){
-
         no_seg = quebra_vet(vet,j-1);
-
         printf("\nIteracao: %d - No seguinte: %d\n", j, no_seg);
         
         for(i=1; i<vet[0]; i++)
@@ -192,7 +189,6 @@ int main(){
         printf("\n");
     
         vet = copiar(vet_copy);
-
     }
         */
     /*leitura da matriz de adjacencia*/
