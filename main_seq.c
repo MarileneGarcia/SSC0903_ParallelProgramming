@@ -23,7 +23,7 @@ int *pcv(int **matriz_adj, int *nos_seg, int no_atual);
 int **matriz(FILE *fp, int n){
 
     int i,j;
-    int **m = (int**)malloc(n*sizeof(int));
+    int **m = (int**)malloc(n*sizeof(int*));
 
     for(i = 0; i<n; i++)
         m[i] = (int*)malloc(n*sizeof(int));
@@ -88,7 +88,7 @@ int *pcv(int** matriz_adj, int* nos_seg, int no_atual){
 
     int *retorno;
     /* chegou a o ultimo nó */
-    if(nos_seg[0] == 2){
+    if(nos_seg[0] == 1){
         
         /* cria um vetor que sera pcv*/
         retorno = (int*)malloc(4*sizeof(int));
@@ -232,11 +232,15 @@ int main(){
 
     //free(matriz_adj);
 
-    for(i=0; i<caminho[0]; i++)
+    /* Print custo*/
+    printf("%d\n", caminho[1]);
+
+    /* caminho */
+    for(i=caminho[0]-1; i>=2; i--)
         printf("%d ", caminho[i]);
 
     printf("\n");
-    
+
     free(nos_seg);
     free(caminho);
 
