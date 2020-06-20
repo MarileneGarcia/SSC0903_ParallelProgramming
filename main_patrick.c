@@ -1,6 +1,9 @@
 /*    PROBLEMA DO CAIXEIRO VIAJANTE    */
-/*  author: Patrick O Feitosa    */
+/*    0 1 2 3 0 -> 7 4 0 3 2 1 0       */
 /* pcv[]     =  TAM|CUSTO|CAMINHO_INV */
+/*      4 1 2 3*/
+/*      no1 -> 3 2 3   no2 -> 3 1 3     ...  */
+/*      no2 -> 2 3  no3 -> 2 2 */
 /* nos_seg[] =  TAM|CONJ_NOS_SEGUINTES */
 
 #include <stdio.h>
@@ -9,6 +12,7 @@
 /* le a matriz no arquivo fp*/
 int **matriz(FILE *fp, int n);
 /* retira um elemento do vetor e o retorna */
+/* 4 1 2 3 (0)->   3 2 3*/
 int quebra_vet(int *vet, int pos);
 /* retorna uma copia de um vetor*/
 int *copiar(int *vet);
@@ -94,12 +98,12 @@ int *pcv(int** matriz_adj, int* nos_seg, int no_atual){
 
         /* atualizar o custo */
         retorno[1] = matriz_adj[no_atual][nos_seg[1]]; 
-        retorno[1]+=matriz_adj[nos_seg[1]][0];
+        retorno[1] += matriz_adj[nos_seg[1]][0];
 
-        /* adiciona o no atual */
+        /* adiciona o no final */
         retorno[2] = 0;
 
-        /* adiciona o no final = inicial */
+        /* adiciona o no atual */
         retorno[3] = no_atual;
 
 
@@ -110,6 +114,7 @@ int *pcv(int** matriz_adj, int* nos_seg, int no_atual){
         /* guarda o noh futuro que sera visitado */
         int prox_no_atual;
         /* mantem uma copia*/
+        /* 4 1 2 3*/
         int *no_seg_copy = copiar(nos_seg);
         /* retorno de menor caminho anterior*/
         int *retorno_aux;
@@ -119,10 +124,12 @@ int *pcv(int** matriz_adj, int* nos_seg, int no_atual){
         int custo;
 
         /* percorrerah todos os nos possiveis */
+        /* nos_seg = TAM|NOS_SEGS*/
         for(j = 1; j<nos_seg[0]; j++){
             
             /* retorna o elemento que sera o proximo noh e o retira do vetor */
-            prox_no_atual = quebra_vet(nos_seg, i-1);
+            /*3 1 3*/
+            prox_no_atual = quebra_vet(nos_seg, j-1);
 
             if(prox_no_atual == -1)
                 printf("Erro: quebra de vet");
@@ -136,20 +143,16 @@ int *pcv(int** matriz_adj, int* nos_seg, int no_atual){
             if(menor_custo>retorno_aux[1]+custo){
                 retorno = retorno_aux;
                 menor_custo = retorno[1]+custo;
-            }else{
-
-                free(retorno_aux);
             }
-
+            /*3 2 3*/
             /* faz uma copia do nos_seg original*/
-            free(nos_seg);
-            
             nos_seg = copiar(no_seg_copy);
+            /*4 1 2 3 */
 
         }
 
         /* aumenta o tamanho do vetor*/
-        retorno = realloc(retorno, (retorno[0]+1)*sizeof(int));
+        retorno = (int*)realloc(retorno, (retorno[0]+1)*sizeof(int));
         /*adicionar o custo */
         retorno[1] = menor_custo;
         /*adiciona o no atual*/
@@ -210,7 +213,7 @@ int main(){
     /*le a matriz*/
     matriz_adj = matriz(fp,n);
     /*fecha o arquivo*/
-    fclose(fp);
+    /*fclose(fp);*/
 
 
     int no_inicial = 0;
@@ -224,11 +227,16 @@ int main(){
 
     caminho = pcv(matriz_adj, nos_seg, no_inicial);
 
-    for (i=0; i < n; i++)
-        free(matriz_adj[i]);
+   // for (i=0; i < n; i++)
+     //   free(matriz_adj[i]);
 
-    free(matriz_adj);
+    //free(matriz_adj);
 
+    for(i=0; i<caminho[0]; i++)
+        printf("%d ", caminho[i]);
+
+    printf("\n");
+    
     free(nos_seg);
     free(caminho);
 
