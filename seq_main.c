@@ -198,7 +198,7 @@ int main(){
     int *caminho;
 
     /*abre o arquivo*/
-    fp = fopen("entrada.txt","r");
+    fp = fopen("arquivo_entrada.txt","r");
 
     if (fp == NULL){
         printf("Erro na abertura do arquivo\n");
