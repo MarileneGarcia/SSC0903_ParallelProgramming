@@ -3,18 +3,20 @@
 #include "mpi.h"
 #include "pcv.h"
 
-int main( argc, argv )
-int argc;
-char **argv;
+int master_io( MPI_Comm, MPI_Comm);
+
+int slave_io( MPI_Comm, MPI_Comm);
+
+int main(int  argc, char **argv )
 {
     int rank, size;
     MPI_Comm new_comm;
-
 
     MPI_Init( &argc, &argv );
     MPI_Comm_rank( MPI_COMM_WORLD, &rank );
     //Cria um grupo para o master comunicar todos os escravos
     MPI_Comm_split( MPI_COMM_WORLD, 0, 0, &new_comm );
+
     if (rank == 0) 
         master_io( MPI_COMM_WORLD, new_comm );
     else
@@ -25,8 +27,7 @@ char **argv;
 }
 
 /* This is the master */
-int master_io( master_comm, comm )
-MPI_Comm comm;
+int master_io( MPI_Comm master_comm, MPI_Comm comm )
 {
     int        i,n,size,rank;
     char       buf[256];
@@ -61,13 +62,14 @@ MPI_Comm comm;
         //MPI_Recv( buf, 256, MPI_CHAR, i, 0, master_comm, &status );
         //fputs( buf, stdout );
     }
+
+    return 0;
 }
 
         /* This is the slave */
-int slave_io( master_comm, comm )
-MPI_Comm comm;
+int slave_io( MPI_Comm master_comm, MPI_Comm comm )
 {
-    char buf[256];
+    //char buf[256];
     int  rank, n,i;
     int** matriz;
     MPI_Status status;
@@ -75,15 +77,15 @@ MPI_Comm comm;
     //sprintf( buf, "Hello from slave %d\n", rank );
 
     //Recebe o quantidade de cidades a serem visitadas
-    MPI_Recv( &n, 1, MPI_INT, 0, 0, master_comm, &status );
-
+    MPI_Recv( &n, 1, MPI_INT, 0, 0, MPI_COMM_WORLD, &status );
     printf("rank %d     n = %d\n",rank,n);
+
     matriz = (int**)malloc(n*sizeof(int*));
     for(i = 0; i<n; i++)
         matriz[i] = (int*)malloc(n*sizeof(int));
-    MPI_Recv( &matriz, n*n, MPI_INT, 0, 1, master_comm, &status );
-
+    MPI_Recv( &matriz[0][0], n*n, MPI_INT, 0, 1, MPI_COMM_WORLD, &status );
     printf("%d\n", matriz[0][0]);
+
     //int nos_seg[n];
     /*inicializa vetor de nos seguintes*/
     //for(i=0;i<n;i++)
