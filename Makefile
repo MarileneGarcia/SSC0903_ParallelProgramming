@@ -21,8 +21,8 @@ comando_um:$(OBJECTS_ONE)
 comando_dois:$(OBJECTS_TWO) 
 	$(COMPILER_TWO) $(OBJECTS_TWO) -o $(EXE_TWO)
 
-#run:
-#./$(EXE_TWO)
+run:
+	./$(EXE_TWO)
 
 #clean:
 #rm $(EXE_TWO)
