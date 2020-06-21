@@ -143,28 +143,30 @@ int *pcv(int **matriz_adj, int *nos_seg, int no_atual)
 
         /* percorrerah todos os nos possiveis */
         /* nos_seg = TAM|NOS_SEGS*/
-        #pragma omp parallel for num_threads(N_THREADS) shared(no_seg_copy, nos_seg, matriz_adj) 
-        for (j = 1; j < nos_seg[0]; j++)
-        {
-            /* retorna o elemento que sera o proximo noh e o retira do vetor */
-            prox_no_atual = quebra_vet(nos_seg, j - 1);
-            if (prox_no_atual == -1)
-                printf("Erro: quebra de vet");
+        #pragma omp parallel
+            #pragma omp single
+                for (j = 1; j < nos_seg[0]; j++){
+                    /* retorna o elemento que sera o proximo noh e o retira do vetor */
+                    prox_no_atual = quebra_vet(nos_seg, j - 1);
+                    if (prox_no_atual == -1)
+                        printf("Erro: quebra de vet");
 
-            /* recebe o caminho de menor custo*/
-            retorno_aux = pcv(matriz_adj, nos_seg, prox_no_atual);
-            custo = matriz_adj[no_atual][prox_no_atual];
+                    /* recebe o caminho de menor custo*/
+                    #pragma omp task shared(retorno_aux)
+                    retorno_aux = pcv(matriz_adj, nos_seg, prox_no_atual);
+                    custo = matriz_adj[no_atual][prox_no_atual];
 
-            /* verifica se caminho recebido possui o menor custo*/
-            #pragma omp critical
-            if (menor_custo > retorno_aux[1] + custo)
-            {
-                retorno = retorno_aux;
-                menor_custo = retorno[1] + custo;
-            }
-            /* faz uma copia do nos_seg original*/
-            nos_seg = copiar(no_seg_copy);
-        }
+                    #pragma omp taskwait
+                    /* verifica se caminho recebido possui o menor custo*/
+                    if (menor_custo > retorno_aux[1] + custo)
+                    {
+                        retorno = retorno_aux;
+                        menor_custo = retorno[1] + custo;
+                    }
+                    /* faz uma copia do nos_seg original*/
+                    nos_seg = copiar(no_seg_copy);
+                }
+        
 
         /* aumenta o tamanho do vetor*/
         retorno = (int *)realloc(retorno, (retorno[0] + 1) * sizeof(int));
@@ -174,6 +176,7 @@ int *pcv(int **matriz_adj, int *nos_seg, int no_atual)
         retorno[retorno[0]] = no_atual;
         /*atualiza o tamanho do vetor*/
         retorno[0]++;
+
     }
     return retorno;
 }
