@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include "mpi.h"
 #include "pcv.h"
+#include <omp.h>
 
 int master_io(MPI_Comm, MPI_Comm);
 
@@ -9,7 +10,7 @@ int slave_io(MPI_Comm, MPI_Comm);
 
 int main(int argc, char **argv)
 {
-    int rank, size;
+    int rank;
     MPI_Comm new_comm;
 
     MPI_Init(&argc, &argv);
@@ -30,16 +31,14 @@ int main(int argc, char **argv)
 int master_io(MPI_Comm master_comm, MPI_Comm comm)
 {
     int i, j, n, size, rank;
-    char buf[256];
     MPI_Status status;
 
     /*leitura da matriz de adjacencia*/
     FILE *fp;
     int *matriz_adj;
-    int *caminho;
 
     /*abre o arquivo*/
-    fp = fopen("2_arquivo_entrada.txt", "r");
+    fp = fopen("arquivo_entrada.txt", "r");
 
     if (fp == NULL)
     {
@@ -122,7 +121,7 @@ int master_io(MPI_Comm master_comm, MPI_Comm comm)
 int slave_io(MPI_Comm master_comm, MPI_Comm comm)
 {
     //char buf[256];
-    int rank, n, i, j;
+    int rank, n, i;
     MPI_Status status;
     MPI_Comm_rank(comm, &rank);
     //sprintf( buf, "Hello from slave %d\n", rank );

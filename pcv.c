@@ -1,10 +1,11 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "pcv.h"
+#include <omp.h>
 
 int *matriz(FILE *fp, int n)
 {
-    int i, j;
+    int i;
     int *m = (int *)malloc(n * n * sizeof(int));
 
     for (i = 0; i < n * n; i++)
@@ -33,13 +34,13 @@ void print_vetor(int *matriz, int n)
 
 int **fenix_matriz(int *vetor, int n)
 {
-    int i, j;
+    int i;
 
     int **m = (int **)calloc(n, sizeof(int *));
-    for (int i = 0; i < n; i++)
+    for (i = 0; i < n; i++)
         m[i] = (int *)calloc(n, sizeof(int));
 
-    for (int i = 0; i < n; i++)
+    for (i = 0; i < n; i++)
         for (int j = 0; j < n; j++)
             m[i][j] = vetor[i * n + j];
 
