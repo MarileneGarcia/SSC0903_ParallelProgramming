@@ -13,7 +13,7 @@ OBJECTS_TWO=parallel.c
 
 # Executable name
 EXE_ONE=exe
-EXE_TWO=resultados
+EXE_TWO=pcv
 
 ENTRADA = arquivo_entrada.txt
 
