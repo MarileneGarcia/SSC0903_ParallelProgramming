@@ -3,6 +3,8 @@
 #include "pcv.h"
 #include <omp.h>
 
+#define N_THREADS 4
+
 int *matriz(FILE *fp, int n)
 {
     int i;
@@ -35,11 +37,13 @@ void print_vetor(int *matriz, int n)
 int **fenix_matriz(int *vetor, int n)
 {
     int i;
-
     int **m = (int **)calloc(n, sizeof(int *));
+
+#pragma omp parallel for num_threads(N_THREADS)
     for (i = 0; i < n; i++)
         m[i] = (int *)calloc(n, sizeof(int));
 
+#pragma omp parallel for collapse(2) num_threads(N_THREADS)
     for (i = 0; i < n; i++)
         for (int j = 0; j < n; j++)
             m[i][j] = vetor[i * n + j];
@@ -139,31 +143,27 @@ int *pcv(int **matriz_adj, int *nos_seg, int no_atual)
 
         /* percorrerah todos os nos possiveis */
         /* nos_seg = TAM|NOS_SEGS*/
+        #pragma omp parallel for num_threads(N_THREADS) shared(no_seg_copy, nos_seg, matriz_adj) 
         for (j = 1; j < nos_seg[0]; j++)
         {
-
             /* retorna o elemento que sera o proximo noh e o retira do vetor */
-            /*3 1 3*/
             prox_no_atual = quebra_vet(nos_seg, j - 1);
-
             if (prox_no_atual == -1)
                 printf("Erro: quebra de vet");
 
             /* recebe o caminho de menor custo*/
             retorno_aux = pcv(matriz_adj, nos_seg, prox_no_atual);
-
             custo = matriz_adj[no_atual][prox_no_atual];
 
             /* verifica se caminho recebido possui o menor custo*/
+            #pragma omp critical
             if (menor_custo > retorno_aux[1] + custo)
             {
                 retorno = retorno_aux;
                 menor_custo = retorno[1] + custo;
             }
-            /*3 2 3*/
             /* faz uma copia do nos_seg original*/
             nos_seg = copiar(no_seg_copy);
-            /*4 1 2 3 */
         }
 
         /* aumenta o tamanho do vetor*/

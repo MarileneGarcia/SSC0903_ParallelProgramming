@@ -4,6 +4,8 @@
 #include "pcv.h"
 #include <omp.h>
 
+#define N_THREADS 4
+
 int master_io(MPI_Comm, MPI_Comm);
 
 int slave_io(MPI_Comm, MPI_Comm);
@@ -57,6 +59,7 @@ int master_io(MPI_Comm master_comm, MPI_Comm comm)
     MPI_Comm_rank(comm, &rank);
     //printf("\nrank master: %d\n",rank);
     MPI_Comm_size(master_comm, &size);
+
     for (i = 1; i < n; i++)
     {
         MPI_Send(&n, 1, MPI_INT, i, 0, MPI_COMM_WORLD);
@@ -73,8 +76,9 @@ int master_io(MPI_Comm master_comm, MPI_Comm comm)
 
     int **matriz_rz = fenix_matriz(matriz_adj, n);
 
-    /* percorrerah todos os nos possiveis */
+    /* percorrera todos os nos possiveis */
     /* nos_seg = TAM|NOS_SEGS*/
+    #pragma omp for 
     for (j = 1; j < n; j++)
     {
         // recebe o caminho de menor custo
@@ -141,6 +145,7 @@ int slave_io(MPI_Comm master_comm, MPI_Comm comm)
     /*inicializa vetor de nos seguintes*/
     int *nos_seg = (int *)calloc(n, sizeof(int));
     //printf("\na percorrer no rank %d:\n", rank);
+
     for (i = 0; i < n; i++)
         nos_seg[i] = i;
 
