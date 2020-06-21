@@ -6,7 +6,7 @@
 
 #define N_THREADS 4
 
-int master_io(MPI_Comm, MPI_Comm);
+int master_io(MPI_Comm, MPI_Comm, char**);
 
 int slave_io(MPI_Comm, MPI_Comm);
 
@@ -20,7 +20,7 @@ int main(int argc, char **argv)
     MPI_Comm_split(MPI_COMM_WORLD, 0, 0, &new_comm);
 
     if (rank == 0)
-        master_io(MPI_COMM_WORLD, new_comm);
+        master_io(MPI_COMM_WORLD, new_comm, argv);
     else
         slave_io(MPI_COMM_WORLD, new_comm);
 
@@ -29,7 +29,7 @@ int main(int argc, char **argv)
 }
 
 /* This is the master */
-int master_io(MPI_Comm master_comm, MPI_Comm comm)
+int master_io(MPI_Comm master_comm, MPI_Comm comm, char **argv)
 {
     int i, j, n, size, rank;
     MPI_Status status;
@@ -39,7 +39,7 @@ int master_io(MPI_Comm master_comm, MPI_Comm comm)
     int *matriz_adj;
 
     /*abre o arquivo*/
-    fp = fopen("arquivo_entrada.txt", "r");
+    fp = fopen(argv[1], "r");
 
     if (fp == NULL)
     {

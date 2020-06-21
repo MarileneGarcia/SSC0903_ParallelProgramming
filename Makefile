@@ -4,6 +4,9 @@ COMPILER_TWO=gcc
 # Flags
 CFLAGS=-Wall -lm -fopenmp
 
+#Flag
+	
+
 # Files to compile
 OBJECTS_ONE=parallel_main.c pcv.c
 OBJECTS_TWO=parallel.c
@@ -12,6 +15,7 @@ OBJECTS_TWO=parallel.c
 EXE_ONE=exe
 EXE_TWO=resultados
 
+ENTRADA = arquivo_entrada.txt
 
 all: comando_um comando_dois clean run
 
@@ -22,7 +26,7 @@ comando_dois:$(OBJECTS_TWO)
 	$(COMPILER_TWO) $(OBJECTS_TWO) -o $(EXE_TWO)
 
 run:
-	./$(EXE_TWO)
+	./$(EXE_TWO) $(ENTRADA)
 
 clean:
 	reset
