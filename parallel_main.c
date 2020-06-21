@@ -12,7 +12,6 @@ int main(int argc, char **argv)
 {
     int rank;
     MPI_Comm new_comm;
-
     MPI_Init(&argc, &argv);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     //Cria um grupo para o master comunicar todos os escravos
