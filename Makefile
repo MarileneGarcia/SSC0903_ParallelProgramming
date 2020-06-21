@@ -10,10 +10,10 @@ OBJECTS_TWO=parallel.c
 
 # Executable name
 EXE_ONE=exe
-EXE_TWO=exe_dois
+EXE_TWO=resultados
 
 
-all: comando_um comando_dois run
+all: comando_um comando_dois clean run
 
 comando_um:$(OBJECTS_ONE) 
 	$(COMPILER_ONE) $(OBJECTS_ONE) -o $(EXE_ONE) $(CFLAGS)
@@ -24,8 +24,8 @@ comando_dois:$(OBJECTS_TWO)
 run:
 	./$(EXE_TWO)
 
-#clean:
-#rm $(EXE_TWO)
+clean:
+	reset
 
 #test1:
 #./$(EXE_TWO)
